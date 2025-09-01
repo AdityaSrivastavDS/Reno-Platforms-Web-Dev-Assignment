@@ -11,7 +11,7 @@ export const config = {
 
 function validate(fields) {
   const errors = {}
-  const required = ['name','address','city','state','contact','email_id']
+  const required = ['name', 'address', 'city', 'state', 'contact', 'email_id']
   for (const key of required) {
     if (!fields[key] || !String(fields[key]).trim()) {
       errors[key] = `${key} is required`
@@ -22,7 +22,7 @@ function validate(fields) {
     if (!re.test(String(fields.email_id))) errors.email_id = 'Invalid email'
   }
   if (fields.contact) {
-    const contactStr = String(fields.contact).replace(/\D/g,'')
+    const contactStr = String(fields.contact).replace(/\D/g, '')
     if (contactStr.length < 7 || contactStr.length > 15) errors.contact = 'Invalid contact number'
   }
   return errors
@@ -64,11 +64,12 @@ async function handlePost(req, res) {
       }
 
       const pool = getPool()
-      const [result] = await pool.execute(
+      await pool.query(
         `INSERT INTO schools (name, address, city, state, contact, image, email_id)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [fields.name, fields.address, fields.city, fields.state, String(fields.contact), imageRelPath, fields.email_id]
       )
+
       return res.status(201).json({ ok: true, id: result.insertId, image: imageRelPath })
     } catch (e) {
       console.error(e)
@@ -80,9 +81,11 @@ async function handlePost(req, res) {
 async function handleGet(req, res) {
   try {
     const pool = getPool()
-    const [rows] = await pool.execute(
+    const result = await pool.query(
       'SELECT id, name, address, city, image FROM schools ORDER BY id DESC'
     )
+    return res.status(200).json({ ok: true, data: result.rows })
+
     return res.status(200).json({ ok: true, data: rows })
   } catch (e) {
     console.error(e)
