@@ -43,8 +43,8 @@ async function handlePost(req, res) {
     try {
       if (err) return res.status(400).json({ ok: false, error: String(err) })
 
-      // Convert fields from arrays to strings if needed (formidable may wrap them)
-      Object.keys(fields).forEach(k => {
+      // Convert fields from arrays to strings if needed
+      Object.keys(fields).forEach((k) => {
         if (Array.isArray(fields[k])) fields[k] = fields[k][0]
       })
 
@@ -59,18 +59,26 @@ async function handlePost(req, res) {
         const ext = path.extname(file.originalFilename || file.newFilename || '')
         const safeName = `school_${Date.now()}${ext || ''}`
         const dest = path.join(uploadDir, safeName)
-        await fs.promises.rename(file.filepath || file._writeStream?.path || file.path, dest)
+        await fs.promises.rename(file.filepath || file.path, dest)
         imageRelPath = `/schoolImages/${safeName}`
       }
 
       const pool = getPool()
       await pool.query(
-        `INSERT INTO schools (name, address, city, state, contact, image, email_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-        [fields.name, fields.address, fields.city, fields.state, String(fields.contact), imageRelPath, fields.email_id]
+        `INSERT INTO public.schools (name, address, city, state, contact, image, email_id)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          fields.name,
+          fields.address,
+          fields.city,
+          fields.state,
+          String(fields.contact),
+          imageRelPath,
+          fields.email_id,
+        ]
       )
 
-      return res.status(201).json({ ok: true, id: result.insertId, image: imageRelPath })
+      return res.status(201).json({ ok: true, message: 'School added successfully!' })
     } catch (e) {
       console.error(e)
       return res.status(500).json({ ok: false, error: 'Server error' })
@@ -82,11 +90,9 @@ async function handleGet(req, res) {
   try {
     const pool = getPool()
     const result = await pool.query(
-      'SELECT id, name, address, city, image FROM schools ORDER BY id DESC'
+      'SELECT id, name, address, city, image FROM public.schools ORDER BY id DESC'
     )
     return res.status(200).json({ ok: true, data: result.rows })
-
-    return res.status(200).json({ ok: true, data: rows })
   } catch (e) {
     console.error(e)
     return res.status(500).json({ ok: false, error: 'Server error' })
