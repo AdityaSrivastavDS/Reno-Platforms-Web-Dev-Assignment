@@ -9,7 +9,7 @@ A tiny full‑stack app with two pages:
 - Next.js 14 (Pages Router for simplicity)
 - Tailwind CSS
 - react-hook-form
-- MySQL (mysql2 + pooled connections)
+- Netlify Neon DB (postgresql)
 - formidable for multipart file upload
 
 ## Quick Start
